@@ -7,7 +7,7 @@ Create Pairwise Distance Matrix
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-Create a matrix of pairwise distances of a given set of points in the plane
+Creates a matrix of pairwise distances of a given set of points in the plane
 }
 \usage{
 Pairwisedist(x_vector, y_vector)
@@ -25,6 +25,8 @@ A vector of y values
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 For use in caluclating the Vietoris-Rips complex for a given set of points.
+1-simplexes can be represented as those points in the matrix whose distances
+are less than a given epsilon.
 }
 \value{
 %%  ~Describe the value returned
@@ -32,18 +34,26 @@ For use in caluclating the Vietoris-Rips complex for a given set of points.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-Returns a matrix of distances
+Returns a matrix of the pairwise distances of a given set of x and y coordinates
 }
 \references{
 %% ~put references to the literature/web site here ~
-My Github <- github.com/ftkjr
+Fred's Github <- github.com/ftkjr
 }
 \author{
 %%  ~~who you are~~
 Frederick T. Kaesmann, Jr.
+
+Dani Rosenberg
+
+Kun Woo Lee
 }
 \note{
 %%  ~~further notes~~
+Developed for Dr. Aaron Clark's MAT 499 Topological Data Analysis Independent
+Study, Spring of 2020
+
+Developed During the Great Covid Quarantine of 2020
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
@@ -85,8 +95,9 @@ Pairwisedist <- function(x, y){
   }
   ##### Return Pairwise Distance Matrix ####
   return(distmat)
+  }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ math }% use one of  RShowDoc("KEYWORDS")
+\keyword{ graphs }% __ONLY ONE__ keyword per line

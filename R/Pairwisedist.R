@@ -7,19 +7,25 @@
 #'
 #' @examples Pairwisedist(x_vector, y_vector)
 Pairwisedist <- function(x, y){
-  ##### Source functions ####
-  sourceCpp('src/euclideandist.cpp')
-  ##### Initialize Empty Matrix ####
-  distmat <- matrix(nrow = length(x),
-                    ncol = length(y))
+
+  ##### Packages ####
+  if (!require(magrittr)) install.packages("magrittr")
+  library(magrittr)
+
+  ##### Vector Length ####
+  vec_length <- length(x)
 
   ##### Populate Distance Matrix ####
-  for (i in c(1:length(x))) {
-    for (j in c(1:length(y))) {
-      distmat[i, j] <- euclideandist(x[i], y[i],
-                                     x[j], y[j])
-    }
-  }
+  distmat <- PairwisedistMatrix(x, y) %>%
+    matrix(nrow = vec_length,
+           ncol = vec_length,
+           dimnames = list(
+             # Rownames
+             paste("Point", c(1:vec_length)),
+             # Colnames
+             paste("Point", c(1:vec_length))
+           ))
+
   ##### Return Pairwise Distance Matrix ####
   return(distmat)
 }

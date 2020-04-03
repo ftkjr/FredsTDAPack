@@ -5,3 +5,11 @@ Euclideandist <- function(x1, y1, x2, y2) {
     .Call('_FredsVietorisRips_Euclideandist', PACKAGE = 'FredsVietorisRips', x1, y1, x2, y2)
 }
 
+PairwisedistMatrix <- function(x, y) {
+    .Call('_FredsVietorisRips_PairwisedistMatrix', PACKAGE = 'FredsVietorisRips', x, y)
+}
+
+centroid <- function(x, y) {
+    .Call('_FredsVietorisRips_centroid', PACKAGE = 'FredsVietorisRips', x, y)
+}
+
