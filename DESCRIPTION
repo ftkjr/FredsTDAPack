@@ -1,0 +1,11 @@
+Package: FredsVietorisRips
+Type: Package
+Title: Vietoris-Rips Complex from Scratch
+Version: 0.1.0
+Author: Fred Kaesmann with Dani Rosenberg and Kun Woo Lee
+Maintainer: Fred <fredkaesmannjr@gmail.com>
+Description: This package will create a Vietoris Rips complex from scratch.
+License: License to kill
+Encoding: UTF-8
+LazyData: true
+LinkingTo: Rcpp
