@@ -19,9 +19,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// PairwisedistMatrix
+NumericMatrix PairwisedistMatrix(NumericVector x, NumericVector y);
+RcppExport SEXP _FredsVietorisRips_PairwisedistMatrix(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(PairwisedistMatrix(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// centroid
+NumericVector centroid(NumericVector x, NumericVector y);
+RcppExport SEXP _FredsVietorisRips_centroid(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(centroid(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FredsVietorisRips_Euclideandist", (DL_FUNC) &_FredsVietorisRips_Euclideandist, 4},
+    {"_FredsVietorisRips_PairwisedistMatrix", (DL_FUNC) &_FredsVietorisRips_PairwisedistMatrix, 2},
+    {"_FredsVietorisRips_centroid", (DL_FUNC) &_FredsVietorisRips_centroid, 2},
     {NULL, NULL, 0}
 };
 

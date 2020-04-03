@@ -7,7 +7,7 @@ Determine Euclidean distance between two points
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
-This function calculates the Euclidean distance in $\mathbb{R}^2$ and returns it.
+This function calculates the Euclidean distance in R^2 and returns it.
 }
 \usage{
 d <- Eudlideandist(x1, y1, x2, y2)
@@ -79,5 +79,5 @@ float Euclideandist(float x1,
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ math }% use one of  RShowDoc("KEYWORDS")
+\keyword{ graphs }% __ONLY ONE__ keyword per line

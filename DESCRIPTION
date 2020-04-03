@@ -9,3 +9,5 @@ License: License to kill
 Encoding: UTF-8
 LazyData: true
 LinkingTo: Rcpp
+Imports: Rcpp
+Depends: Rcpp
