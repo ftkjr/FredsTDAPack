@@ -1,4 +1,4 @@
-#include <Rcpp.h>
+# include <Rcpp.h>
 using namespace Rcpp;
 //` EuclideanDist
 //`
@@ -7,6 +7,7 @@ using namespace Rcpp;
 //` @param x2 next x in sequence
 //` @param y2 next y in sequence
 //` @return d the euclidean distance between two points
+
 // [[Rcpp::export]]
 float Euclideandist(float x1,
                     float y1,

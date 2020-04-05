@@ -12,6 +12,12 @@ Pairwisedist <- function(x, y){
   if (!require(magrittr)) install.packages("magrittr")
   library(magrittr)
 
+  ##### Errors ####
+  if (length(x) != length(y)) {
+    stop("Pairwisedist: x and y vectors not of equal length.\n
+         Are you sure everything's paired?")
+  }
+
   ##### Vector Length ####
   vec_length <- length(x)
 
@@ -21,9 +27,9 @@ Pairwisedist <- function(x, y){
            ncol = vec_length,
            dimnames = list(
              # Rownames
-             paste("Point", c(1:vec_length)),
+             paste0("P", c(1:vec_length)),
              # Colnames
-             paste("Point", c(1:vec_length))
+             paste0("P", c(1:vec_length))
            ))
 
   ##### Return Pairwise Distance Matrix ####

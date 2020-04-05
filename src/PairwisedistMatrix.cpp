@@ -1,6 +1,7 @@
 # include <Rcpp.h>
-# include "PairwisedistMatrix.h"
+# include "Euclideandist.h"
 using namespace Rcpp;
+
 // [[Rcpp::export]]
 
 NumericMatrix PairwisedistMatrix(NumericVector x,
@@ -12,7 +13,8 @@ NumericMatrix PairwisedistMatrix(NumericVector x,
 
   for(i = 0; i < n; i++){
     for(j = 0; j < n; j++){
-      pwdmat(i, j) = pow(pow((x[i] - x[j]),2) + pow((y[i] - y[j]),2), 0.5);
+       pwdmat(i, j) = pow(pow((x[i] - x[j]),2) + pow((y[i] - y[j]),2), 0.5);
+      //pwdmat(i, j) = Euclideandist(x[i], y[i], x[j], y[j]);
     }
   }
   return pwdmat;
