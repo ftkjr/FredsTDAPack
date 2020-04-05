@@ -1,0 +1,129 @@
+---
+title: "README"
+subtitle: 'A "How To"'
+author: "Fred Kaesmann, Dani Rosenberg and Kun Woo Lee"
+date: "April 4, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      # Figure Settings
+                      fig.asp = 0.618,
+                      fig.width = 6)
+```
+
+## How to Handle our Package
+Welcome to the intro to
+```{r}
+
+library(FredsVietorisRips)
+```
+We lovingly designed this package for use in Dr. Aaron Clark's MAT 499
+Topological Data Analysis Independent Study.
+\footnote{TDAIS for short}
+This package was developed to replicate aspects of the Mapper Algorithm from 
+\textit{insert sing, carlsson et al}.
+
+It is to be used in the following manner
+
+## Usage
+
+### Downloading
+To download from Github, copy and paste the following into the console
+```{r}
+if (!require(devtools)) install.packages("devtools")
+library(devtools)
+if (!require(FredsVietorisRips)) install_github("ftkjr/FredsVietorisRips")
+library(FredsVietorisRips)
+```
+
+### Simplices, 0 and 1 
+
+To create our 1-simplices,
+\begin{enumerate}
+  \item[Step 1:] We generate a data frame of random $x$ and $y$ 
+coordinates 
+
+  \item[Step 2:] We create a matrix of pairwise distances
+  
+  \item[Step 3:] Given a distance, $\epsilon,$ we develop an 
+                  adjacency matrix which displays a 1 for each pair within a 
+                  ball of diameter $\epsilon$
+  
+  \item[Step 4:] From the adjacency matrix, we pull out the points which are 
+                  adjacent.
+                  This is a list of all 1-simplexes in the dataset
+                  
+  \item[Step 5:] Last, we visualize the simplices using the `ggplot2` library
+\end{enumerate}
+
+
+```{r step_1}
+##### Step 1: Create Data Frame ####
+frame_size <- 12
+df <- data.frame(
+  x = runif(frame_size),
+  y = runif(frame_size),
+  Point = paste0("P", c(1:frame_size))
+)
+
+##### Step 2: Pairwise Distance Matrix ####
+
+pwdmat <- Pairwisedist(df$x, df$y)
+pwdmat
+
+##### Step 3: Given epsilon, determine Adjacency ####
+# Given epsilon
+epsilon <- 0.25
+
+# Determine Adjacency 
+adjacency_matrix <- AdjacencyMatrix(pwdmat, epsilon)
+adjacency_matrix
+
+
+##### Step 4: Which Points are Adjacent? ####
+paired_points <- AdjacentPairs(adjacency_matrix)
+paired_points
+
+##### Step 5: Plot 0 and 1 Simplices ####
+# Using the ggplot2 package 
+library(ggplot2)
+paired_points %>%
+  melt(measure.vars = c("Point_1", "Point_2")) %>%
+  select(group, value) %>%
+  rename(Point = value) %>%
+  left_join(df, by = "Point") %>%
+  ggplot() +
+  geom_line(aes(x, y, group = group)) + # Plot the 1-simplexes
+  geom_point(data = df, aes(x, y)) +    # Plot the 0-simplexes
+  ggtitle("0 and 1 Simplices")
+
+
+```
+
+## Do all
+We have provided a "do all" function, if provided an $x$ and $y$ vector, with
+a distance $\epsilon$ it is generous enough to spit out a graph of the 
+associated 1-simplices under the Vietoris-Rips arrangement. 
+```{r}
+Plot_Simplices(df$x, df$y, epsilon)
+```
+
+
+
+This may be most useful for iterating through various $\epsilon$ values to
+determine
+\footnote{Subjectively}
+which of various graphs best describes the underlying data.
+
+
+
+
+
+
+
+
+
