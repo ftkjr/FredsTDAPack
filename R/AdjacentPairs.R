@@ -32,7 +32,13 @@ AdjacentPairs <- function(adjacency_matrix,
     melt()
 
   ##### Select Paired Points ####
-  adjacency_frame <- adjacency_frame[adjacency_frame$value == 1, ]
+  if (sum(adjacency_frame$value > 0)) {
+    adjacency_frame <- adjacency_frame[adjacency_frame$value == 1, ]
+  } else {
+    stop("No 1-simplex or higher present in data.\n
+          We recommend the use of Plot_0_Simplices() instead.")
+  }
+
 
   ##### Change Column and Row Names ####
   colnames(adjacency_frame) <- c("Point_1", "Point_2", "Connection")

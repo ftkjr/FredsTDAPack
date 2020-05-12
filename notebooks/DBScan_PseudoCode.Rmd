@@ -1,0 +1,123 @@
+---
+title: "DB Scan Pseudo Code"
+output: html_notebook
+---
+
+```{r packages}
+library(FredsVietorisRips)
+library(magrittr)
+```
+
+Given a data set, a maximum distance for adjacency $\epsilon$, and a minimum
+number of connections for a point to not be considered noise, we try to count
+clusters.
+```{r data}
+x <- c(runif(10), runif(10) + 10, runif(10) + 20)
+y <- c(runif(10), runif(10) + 10, runif(10) + 20)
+```
+
+```{r epsilon}
+epsilon <- 0.5
+```
+
+We want an adjacency matrix from our given epsilon to make it easier to sort
+through everything.
+```{r construct_adjacency_matrix}
+adjacency_matrix <- Pairwisedist(x, y) %>%
+  AdjacencyMatrix(epsilon)
+```
+
+
+We want each point in our cluster to have a minimum number of connections to 
+other points, otherwise we classify it as noise.
+
+```{r minimum_connection_number}
+min_connections <- 3
+```
+
+```{r}
+l <- list()
+adjmat_size <- ncol(adjacency_matrix)
+v <- vector()
+for (i in c(1:adjmat_size)) {
+  if (sum(adjacency_matrix[i, ]) >= min_connections){
+    for (j in c(1:adjmat_size)) {
+      if (adjacency_matrix[i, j] == 1) {
+        v <- append(v, j)
+      }
+    }
+    for (element in v){
+      if (v)
+    }
+  }
+}
+```
+
+```{r}
+##### Initialize Container ####
+lmajor <- list()
+
+adjmat_size <- nrow(adjacency_matrix)
+##### Iterate ####
+  for (i in c(1:adjmat_size)) {
+    v <- vector()
+    if (sum(adjacency_matrix[i, ]) >= min_connections) { # if it clusters
+      
+      for (j in c(1:length(adjacency_matrix))) {
+        if (adjacency_matrix[i, j] == 1) {
+          
+          if (sum(adjacency_matrix[, j]) >= min_connections) {
+            v <- append(v, j)
+          }
+        }
+      }
+      
+      
+    }
+    # insert if here to check if i already in list
+
+    if (length(v) > 0) {
+      lmajor[[i]] <- v
+    }
+    
+  } #endfori
+# }
+lmajor
+```
+
+
+```{r}
+component <- list()
+for (i in c(1:length(lmajor))) {
+  ##### Populate list with possible clusters ####
+  if (length(lmajor[[i]]) >= min_connections) {
+    component[[i]] <- lmajor[[i]]
+  }#endif
+}#endfor
+component <- Filter(Negate(is.null), component)
+component
+```
+
+```{r}
+for (i in c(1:length(component))) {
+   for (j in component[[i]]) {
+    if (length(lmajor[[j]]) >= min_connections) {
+      component[[i]] <- append(component[[i]], lmajor[[j]])
+      component[[i]] <- unique(component[[i]])
+    }
+  }
+
+}
+
+component <- unique(lapply(component, sort))
+for (i in c(1:length(component))){
+  for (j in c(1:length(component))) {
+    if (component[[i]] %in% component[[j]]) {
+      component[[i]] <- append(component[[i]], component[[j]])
+      component[[i]] <- unique(component[[i]])
+    }
+  }
+}
+component
+```
+
