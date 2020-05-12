@@ -1,0 +1,154 @@
+---
+title: "For Topology 4/10/2020"
+author: "Fred Kaesmann"
+output:
+  pdf_document: default
+  html_notebook: default
+date: "4/7/2020"
+---
+
+From my notes from Monday (4/7/2020):
+
+Example filter function:
+\begin{equation*}
+  \Sigma = \text{ Sample } = \{ ( x_i, y_i) \}
+\end{equation*}
+
+
+Program cover with resolution and gain 
+\begin{itemize}
+  \item If given a resolution and gain from user
+  \item and some given height function (example above)
+  \item Determine the overlap of covers (intersections of pullbacks)
+  \item cluster points in overlap (user's choice)
+  \item cluster become the connected components
+\end{itemize}
+
+
+
+Small program for Wednesday:
+\begin{enumerate}
+  \item Input:
+  \begin{itemize}
+    \item $N$: points in $R^2$ with $y \geq 0$
+    \item $r$: resolution value
+    \item $g$: gain
+  \end{itemize}
+  \item Output: Under $r$ and $g$ values given
+  \begin{itemize}
+    \item Produce the preimages of the covering intervals 
+    \item "If you're feeling froggy:" Maybe consider an instersection matrix
+            for when pullbacks nontrivially intersect?
+  \end{itemize}
+\end{enumerate}
+
+\clearpage
+
+## Part 1
+
+```{r}
+PullBackCovers <- function(x, y, resolution, gain){
+
+  ##### Create New Data Frame from x and y Values Entered ####
+  df <- data.frame(
+    x = x,
+    y = y
+  )
+  
+  ##### Initial Info ####
+  y_max <- max(df$y)                                 # When to stop
+  increment <- resolution * (1 - gain)               # Lower bound iterations
+  n_sets <- ceiling(y_max / increment)               # Number of Sets
+
+  ##### Cover Boundaries ####
+  # Initialize Variables
+  lower <- 0 - increment
+  upper <- lower + resolution
+  covers <- list()
+  for (cover_number in c(1:n_sets)) {
+    covers[[cover_number]] <- df[df$y > lower & df$y < upper, ] # List entry cover
+    lower <- (increment * cover_number)                         # Lower Bound
+    upper <- lower + resolution                                 # Upper Bound
+    
+  }
+  ##### Meaningful List Entry Names ####
+  names(covers) <- paste0("Cover_", c(1:n_sets))
+  
+  ##### Return the list ####
+  return(covers)
+}
+
+
+```
+
+
+
+```{r}
+covers <- PullBackCovers(runif(10)*10, runif(10)*10,
+                           resolution =  4, 
+                                 gain =  0.75)
+print(covers[c(1:2)])
+```
+
+
+\clearpage
+
+## Part 2
+```{r}
+CoverAdjacency <- function(covers, binary = TRUE) {
+  ##### Adjacency Matrix ####
+
+  ##### Packages ####
+  library(dplyr, warn.conflicts = F, quietly = T)
+  
+  ##### Iteration Ranges ####
+  list_length <- length(covers)
+  list_range <- c(1:list_length)
+  
+  ##### Initialize Empty Matrix #####
+  adj_mat <- matrix(nrow = list_length,
+                   ncol = list_length,
+                   dimnames = list(
+                     paste0("C",list_range),
+                     paste0("C",list_range)
+                   ))
+  
+  ##### ith Row, jth Column ####
+  for (i in list_range) {
+  for (j in list_range) {
+     
+   ##### Binary Adjacency Matrix ####
+   if (binary == TRUE) {
+     if (nrow(anti_join(covers[[i]], covers[[j]], by = c("x", "y"))) < nrow(covers[[i]])){
+       adj_mat[i, j] <- 1
+     } else {
+       adj_mat[i, j] <- 0
+     }
+    ##### Count the Overlapped Points ####
+   } else {
+     adj_mat[i, j] <- nrow(covers[[i]]) - nrow(anti_join(covers[[i]], covers[[j]], by = c("x", "y")))
+   }
+     
+  }
+  }
+  
+  ##### Return the Adjacency Matrix ####
+  return(adj_mat)
+}
+
+```
+
+\clearpage
+
+```{r}
+##### Binary Adjacency Matrix ####
+CoverAdjacency(covers)
+```
+
+```{r}
+##### Count the Points in Common ####
+CoverAdjacency(covers, binary=FALSE)
+```
+
+
+

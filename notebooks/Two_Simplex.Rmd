@@ -1,0 +1,63 @@
+---
+title: "Two Simplices"
+output: html_notebook
+---
+
+Given a set of points 
+```{r}
+df <- data.frame(
+  x = runif(20),
+  y = runif(20)
+)
+```
+
+We start with a matrix of their pairwise distances
+```{r}
+pwdmat <- Pairwisedist(df$x, df$y)
+```
+
+From there we want a matrix of adjacencies. 
+We determine adjacencies by which pairs of points are within a distance,
+$\epsilon$.
+These connections represent our set of 1-simplices.
+
+For our purposes now, we want just the top right of the adjacency matrix or the
+$\binom{N - 1}{2}$ pairs in the top right of the matrix, where $N$ is the total
+number of point provided. 
+```{r}
+epsilon <- 0.5
+adj_triangle <- AdjacencyMatrix(pwdmat, epsilon, top_right = TRUE)
+```
+
+To make things faster, we remove all points from our matrix who have less 
+than 3 connections 
+
+```{r}
+adj_triples <- RemoveNoise(adj_triangle, 3)
+```
+
+Using the new matrix of points with connections $\geq 3$ we create a matrix
+of three point triangles.
+
+```{r}
+triple_mat <- Connected_Triples(adj_triples)
+```
+
+
+With the new matrix of triangles, we create a newer matrix of triangles whose
+points are all within $\epsilon / 2$ of the centroid of the triangle.
+
+```{r}
+two_simplices <- Two_Simplex(df$x, df$y, epsilon, triple_mat)
+two_simplices
+```
+
+
+
+
+
+
+
+
+
+

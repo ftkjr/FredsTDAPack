@@ -34,8 +34,6 @@ It is to be used in the following manner
 ### Downloading
 To download from Github, copy and paste the following into the console
 ```{r}
-if (!require(devtools)) install.packages("devtools")
-library(devtools)
 if (!require(FredsVietorisRips)) install_github("ftkjr/FredsVietorisRips")
 library(FredsVietorisRips)
 ```
@@ -47,11 +45,13 @@ To create our 1-simplices,
   \item[Step 1:] We generate a data frame of random $x$ and $y$ 
 coordinates 
 
-  \item[Step 2:] We create a matrix of pairwise distances
+  \item[Step 2:] We create a matrix of pairwise distances. 
+                  Each cell $i,j$ represents the distance from the $i$th point
+                  to the $j$th point.
   
-  \item[Step 3:] Given a distance, $\epsilon,$ we develop an 
-                  adjacency matrix which displays a 1 for each pair within a 
-                  ball of diameter $\epsilon$
+  \item[Step 3:] Given a distance, $\epsilon,$ we return an 
+                  adjacency matrix which displays a 1 for each pair whose 
+                  Euclidean Distance is within the given $\epsilon$ value
   
   \item[Step 4:] From the adjacency matrix, we pull out the points which are 
                   adjacent.
@@ -63,7 +63,7 @@ coordinates
 
 ```{r step_1}
 ##### Step 1: Create Data Frame ####
-frame_size <- 12
+frame_size <- 100
 df <- data.frame(
   x = runif(frame_size),
   y = runif(frame_size),
@@ -73,51 +73,28 @@ df <- data.frame(
 ##### Step 2: Pairwise Distance Matrix ####
 
 pwdmat <- Pairwisedist(df$x, df$y)
-pwdmat
+# pwdmat
 
 ##### Step 3: Given epsilon, determine Adjacency ####
 # Given epsilon
-epsilon <- 0.25
+epsilon <- 0.5
 
 # Determine Adjacency 
 adjacency_matrix <- AdjacencyMatrix(pwdmat, epsilon)
-adjacency_matrix
+# adjacency_matrix
 
 
 ##### Step 4: Which Points are Adjacent? ####
 paired_points <- AdjacentPairs(adjacency_matrix)
-paired_points
+# paired_points
 
 ##### Step 5: Plot 0 and 1 Simplices ####
-# Using the ggplot2 package 
-library(ggplot2)
-paired_points %>%
-  melt(measure.vars = c("Point_1", "Point_2")) %>%
-  select(group, value) %>%
-  rename(Point = value) %>%
-  left_join(df, by = "Point") %>%
-  ggplot() +
-  geom_line(aes(x, y, group = group)) + # Plot the 1-simplexes
-  geom_point(data = df, aes(x, y)) +    # Plot the 0-simplexes
-  ggtitle("0 and 1 Simplices")
+Plot_1_Simplices(df$x, df$y, epsilon)
 
 
 ```
 
-## Do all
-We have provided a "do all" function, if provided an $x$ and $y$ vector, with
-a distance $\epsilon$ it is generous enough to spit out a graph of the 
-associated 1-simplices under the Vietoris-Rips arrangement. 
-```{r}
-Plot_Simplices(df$x, df$y, epsilon)
-```
 
-
-
-This may be most useful for iterating through various $\epsilon$ values to
-determine
-\footnote{Subjectively}
-which of various graphs best describes the underlying data.
 
 
 

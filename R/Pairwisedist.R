@@ -9,7 +9,6 @@
 Pairwisedist <- function(x, y){
 
   ##### Packages ####
-  if (!require(magrittr)) install.packages("magrittr")
   library(magrittr)
 
   ##### Errors ####

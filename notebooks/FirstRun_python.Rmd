@@ -1,0 +1,76 @@
+---
+title: "Source Python"
+output: html_notebook
+---
+
+```{r}
+if (!require(reticulate)) install.packages("reticulate")
+library(reticulate)
+```
+
+
+```{r}
+# Source Python
+filelist <- list.files("python/")
+
+for (f in filelist) {
+  source_python(paste0("python/", f))
+}
+```
+
+```{r}
+##### Generate data ####
+n <- 20
+df <- data.frame(
+  x = runif(n),
+  y = runif(n)
+)
+```
+
+```{r}
+##### Distances between points ####
+pwdmat <- Pairwisedist(df$x, df$y)
+```
+
+
+```{r}
+##### Adjacency Matrix ####
+epsilon <- 0.15
+adjmat <- AdjacencyMatrix(pwdmat, epsilon)
+```
+
+```{r}
+##### Find point clusters ####
+FredsDBSCAN(adjmat, 2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
