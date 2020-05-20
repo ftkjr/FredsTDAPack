@@ -1,0 +1,111 @@
+---
+title: "Persistenc Diagram Construction Notebook"
+output: html_notebook
+---
+
+\section{Persistence Diagram}
+Map Births and Deaths of components in each cover as we move through "time."
+
+We plot $(x_i, y_i)$ where $x_i$ indicates the cover in which we birth a new 
+component, and $y_i$ idicates the death of a new component. 
+
+\section{Pseudo Code}
+| Increment by cover
+|     A component born in the $ith$ cover 
+|     and dies in the $jth$ cover 
+|     gets a point at $(i, j)$ 
+
+
+We begin with a vector of components 
+
+
+```{r our_package, warning=FALSE, message=FALSE}
+##### Packages ####
+library(FredsVietorisRips)  # Our Very Own
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(reticulate)
+```
+
+
+```{r sourcepy}
+##### Source our Python Code for Later Use ####
+# All the code
+filelist <- list.files("../python/")
+for (f in filelist) {
+  source_python(paste0("../python/", f))
+}
+```
+
+
+```{r get_data}
+##### Import Data ####
+df_original <- read.csv("../data/Clark_Sample_data.csv", col.names = c("x", "y"))
+```
+
+```{r sample_data}
+##### Take a section of the original data ####
+sample_size <- 1000
+df <- df_original[df_original$x < 0.5 & df_original$y < 0.25, ]
+df <- sample_n(df, sample_size)
+
+# Make it compatible with Pyton, start with zero
+rownames(df) <- as.numeric(rownames(df)) - 1
+```
+
+
+
+```{r filter_by_cover}
+##### Filter ####
+resolution <- 0.04
+gain <- 0.75
+list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+```
+
+
+```{r dbscan}
+##### Choose Epsilon and Minimum Connections ####
+epsilon <- 0.1
+min_connections <- 3
+
+##### How many components do we have? #####
+components <- vector(length = length(list_of_covers))
+for (cover in c(1:length(list_of_covers))) {
+  components[cover] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%  # Create a distance matrix
+    AdjacencyMatrix(epsilon) %>%                                                               # Determine Adjacent Points
+    FredsDBSCAN(min_connections) %>%                                                           # Scan for Clusters
+    length()                                                                                   # How many clusters?
+}
+
+components
+
+components - lag(components)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

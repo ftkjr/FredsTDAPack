@@ -33,7 +33,7 @@ It is to be used in the following manner
 
 ### Downloading
 To download from Github, copy and paste the following into the console
-```{r}
+```{r eval=FALSE}
 if (!require(FredsVietorisRips)) install_github("ftkjr/FredsVietorisRips")
 library(FredsVietorisRips)
 ```

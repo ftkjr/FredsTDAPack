@@ -1,0 +1,78 @@
+---
+title: "Plot Simplices"
+author: "Fred Kaesmann"
+date: "5/20/2020"
+output: pdf_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 6,
+  fig.asp = 0.618
+)
+```
+
+
+```{r packages}
+##### Packages ####
+library(FredsVietorisRips)
+```
+
+
+### Simplices, 0 and 1 
+
+To create our 1-simplices,
+\begin{enumerate}
+  \item[Step 1:] We generate a data frame of random $x$ and $y$ 
+coordinates 
+
+  \item[Step 2:] We create a matrix of pairwise distances. 
+                  Each cell $i,j$ represents the distance from the $i$th point
+                  to the $j$th point.
+  
+  \item[Step 3:] Given a distance, $\epsilon,$ we return an 
+                  adjacency matrix which displays a 1 for each pair whose 
+                  Euclidean Distance is within the given $\epsilon$ value
+  
+  \item[Step 4:] From the adjacency matrix, we pull out the points which are 
+                  adjacent.
+                  This is a list of all 1-simplexes in the dataset
+                  
+  \item[Step 5:] Last, we visualize the simplices using the `ggplot2` library
+\end{enumerate}
+
+
+```{r step_1}
+##### Step 1: Create Data Frame ####
+frame_size <- 100
+df <- data.frame(
+  x = runif(frame_size),
+  y = runif(frame_size),
+  Point = paste0("P", c(1:frame_size))
+)
+
+##### Step 2: Pairwise Distance Matrix ####
+
+pwdmat <- Pairwisedist(df$x, df$y)
+# pwdmat
+
+##### Step 3: Given epsilon, determine Adjacency ####
+# Given epsilon
+epsilon <- 0.1
+
+# Determine Adjacency 
+adjacency_matrix <- AdjacencyMatrix(pwdmat, epsilon)
+# adjacency_matrix
+
+
+##### Step 4: Which Points are Adjacent? ####
+paired_points <- AdjacentPairs(adjacency_matrix)
+# paired_points
+
+##### Step 5: Plot 0 and 1 Simplices ####
+Plot_1_Simplices(df$x, df$y, epsilon)
+
+
+```

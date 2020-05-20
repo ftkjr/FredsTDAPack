@@ -1,9 +1,9 @@
 ---
 title: "Implementation: Fred's Vietoris Rips"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 <style>
 .main-container { width: 1200px; max-width:2800px;}
@@ -12,6 +12,15 @@ output:
 ```{r set-options, echo=FALSE, cache=FALSE}
 options(width = 2000)
 ```
+
+### Downloading
+To download from Github, copy and paste the following into the console
+```{r eval=FALSE}
+if (!require(FredsVietorisRips)) install_github("ftkjr/FredsVietorisRips")
+library(FredsVietorisRips)
+```
+
+## Use
 
 ```{r our_package, warning=FALSE, message=FALSE}
 ##### Packages ####
@@ -58,6 +67,9 @@ sample_size <- 1000
 df <- df_original[df_original$x < 0.5 & df_original$y < 0.25, ]
 df <- sample_n(df, sample_size)
 
+# Make it compatible with Pyton, start with zero
+rownames(df) <- as.numeric(rownames(df)) - 1
+
 ##### Let's seee what we're working with ####
 sample_chart <- df %>%
   ggplot(aes(x, y)) +
@@ -91,6 +103,7 @@ or an overlap of 75\%.
 resolution <- 0.04
 gain <- 0.75
 list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+
 ```
 
 We can pull back the cover and see what's in one of our pullback covers:
@@ -101,6 +114,8 @@ list_of_covers[[cover_number]] %>%
   ggplot(aes(x, y)) + 
   geom_point() + 
   ggtitle(paste("A Look at Cover", cover_number))
+
+
 ```
 
 We want to determine the number of clusters present in the cover, so that
@@ -109,8 +124,8 @@ we can track the homological features as we move through our data.
 To track these clusters we iterate through our list of covers, 
 creating a distance matrix for each cover then create an adjacency matrix 
 from that distance matrix.
-We use `FredsDBSCAN` to determine the number of connected clusters in each
-cover, and then count the number of clusters present in each cover.
+We use `FredsDBSCAN` within `FindComponents` to find then count the number of
+components within in each cover.
 
 ```{r dbscan}
 ##### Choose Epsilon and Minimum Connections ####
@@ -118,30 +133,18 @@ epsilon <- 0.1
 min_connections <- 3
 
 ##### How many components do we have? #####
-components <- vector(length = length(list_of_covers))
-for (cover in c(1:length(list_of_covers))) {
-  components[cover] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%  # Create a distance matrix
-    AdjacencyMatrix(epsilon) %>%                                                               # Determine Adjacent Points
-    FredsDBSCAN(min_connections) %>%                                                           # Scan for Clusters
-    length()                                                                                   # How many clusters?
-}
+components <- FindComponents(list_of_covers, epsilon, min_connections)
 ```
+
+
 
 After we determining the number of components in each cover, we can plot
 the data with the number of components present as we have below:
 
 ```{r component_chart}
 ##### Component Plot ####
-component_chart <- components %>% 
-  data.frame(
-    components = components,
-    index = c(1:length(components))) %>%
-  ggplot(aes(x = index,
-             y = components)) +
-  geom_col() +
-  xlab("Ith Cover") +
-  coord_flip() +
-  ggtitle("Number of Components in Cover I")
+component_chart <- ComponentBarChart(components)
+
 
 grid.arrange(sample_chart, component_chart, nrow=1)
 ```
@@ -173,28 +176,13 @@ and minimum connections from above.
 ##### List of Pullback Covers ####
 list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
 
-#### FredsDBSCAN ####
-components <- vector(length = length(list_of_covers))
-for (cover in c(1:length(list_of_covers))) {
-  components[cover] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%
-    AdjacencyMatrix(epsilon) %>%
-    FredsDBSCAN(min_connections) %>%
-    length()
-}
+##### Number of Components ####
+components <- FindComponents(list_of_covers, epsilon, min_connections)
 ```
 
 ```{r plot_components}
 ##### Component Plot ####
-component_chart <- components %>% 
-  data.frame(
-    components = components,
-    index = c(1:length(components))) %>%
-  ggplot(aes(x = index,
-             y = components)) +
-  geom_col() +
-  xlab("Ith Cover") +
-  coord_flip() +
-  ggtitle("Number of Components in Cover I")
+component_chart <- ComponentBarChart(components)
 
 grid.arrange(sample_chart, component_chart, nrow=1)
 
@@ -471,10 +459,69 @@ def FredsDBSCAN(adjacency_matrix, minimum_connections):
 ```
 
 
+## FindComponents
+
+```{r findcomponents, eval=FALSE}
+#' @title FindComponents
+#'
+#' @param list_of_covers a list of data frames of x and y coordinates
+#' @param epsilon distance to determine adjacencies
+#' @param minimum_connections minimum number of adjacent points to make a cluster
+#'
+#' @return a list of the indices of the points in each respective cover
+#'
+FindComponents <- function(list_of_covers, epsilon, minimum_connections) {
+  library(magrittr)
+
+  ##### How many components do we have? #####
+  components <- vector("list", length = length(list_of_covers))
+  for (cover in c(1:length(list_of_covers))) {
+    components[[cover]] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%  # Create a distance matrix
+      AdjacencyMatrix(epsilon) %>%                                                               # Determine Adjacent Points
+      FredsDBSCAN(min_connections)                                                               # Scan for Clusters
+  }
+
+  return(components)
+}
+
+```
 
 
 
+## ComponentBarChart
 
+```{r componentbarchart, eval=FALSE}
+#' @title ComponentBarChart
+#'
+#' @param component_list list of components
+#'
+#' @return bar chart of the number of components in each cover
+#'
+ComponentBarChart <- function(component_list) {
+  library(magrittr)
+  library(ggplot2)
+
+  nComponents <- component_list %>%
+    lapply(length) %>%
+    unlist()
+
+  component_chart <- data.frame(
+    index = c(1:length(component_list)),
+    ncomp = nComponents
+  ) %>%
+    ggplot(aes(x = index,
+               y = ncomp)) +
+    geom_col() +
+    xlab("Ith Cover") +
+    ylab("Number of Components") +
+    coord_flip() +
+    ggtitle("Number of Components in Cover I")
+
+  return(component_chart)
+
+}
+
+```
 
 
 
