@@ -1,14 +1,10 @@
 # This is Fred's Vietoris Rips Package
 ## By Fred
-### Begun: April 2020
 
-#### April 21, 2020
-First finished DBSCAN uploaded
+This package determines connected components and plots 1 simplices from a set of x and y coordinates.
 
-
-#### April 17, 2020
-Initial upload date
-
+Example PDFs are in the Instructions_and_Example.
+I recommend the .html file for Implementation, though that needs to be downloaded to be viewed
 
 ### Thank yous
 Thank you to Dani Rosenberg and Kun Woo Lee, my comrades in Topology.
