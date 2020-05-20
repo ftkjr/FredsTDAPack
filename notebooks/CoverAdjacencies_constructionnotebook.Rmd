@@ -1,0 +1,124 @@
+---
+title: "Cover Adjacencies Construction Notebook"
+output: html_notebook
+---
+
+```{r our_package, warning=FALSE, message=FALSE}
+##### Packages ####
+library(FredsVietorisRips)  # Our Very Own
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(reticulate)
+```
+
+
+```{r sourcepy}
+##### Source our Python Code for Later Use ####
+# All the code
+filelist <- list.files("../python/")
+for (f in filelist) {
+  source_python(paste0("../python/", f))
+}
+```
+
+
+```{r get_data}
+##### Import Data ####
+df_original <- read.csv("../data/Clark_Sample_data.csv", col.names = c("x", "y"))
+
+##### Visualize Data ####
+# df_original %>%
+#   ggplot(aes(x, y)) +
+#   geom_point() +
+#   ggtitle("Sample Data")
+
+```
+
+
+```{r sample_data}
+##### Take a section of the original data ####
+sample_size <- 1000
+df <- df_original[df_original$x < 0.5 & df_original$y < 0.25, ]
+df <- sample_n(df, sample_size)
+
+# Make it compatible with Pyton, start with zero
+rownames(df) <- as.numeric(rownames(df)) - 1
+
+# ##### Let's seee what we're working with ####
+# sample_chart <- df %>%
+#   ggplot(aes(x, y)) +
+#   geom_point() + 
+#   ggtitle(paste("Sample of", sample_size, "Points"))
+# 
+# sample_chart
+```
+
+
+```{r filter_by_cover}
+##### Filter ####
+resolution <- 0.04
+gain <- 0.75
+list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+```
+
+
+```{r cover adjacencies}
+ncovers <- length(list_of_covers)
+cover_adjacency_matrix <- matrix(nrow = ncovers, ncol = ncovers)
+for ( i in c(1:ncovers) ) {
+  for ( j in c(1:ncovers)) {
+    tempframe <- rbind(unique(list_of_covers[[i]]), unique(list_of_covers[[j]]))
+    strippedframe <- unique(tempframe)
+    
+    if (nrow(tempframe) > nrow(strippedframe)) {
+      cover_adjacency_matrix[i, j] <- 1
+    } else {
+      cover_adjacency_matrix[i, j] <- 0
+    }
+  }
+}
+
+# rbind(list_of_covers[[1]], list_of_covers[[2]])
+cover_adjacency_matrix
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

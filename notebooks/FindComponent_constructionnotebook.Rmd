@@ -1,0 +1,140 @@
+---
+title: "Find Components Construction Notebook"
+output: html_notebook
+---
+
+
+```{r our_package, warning=FALSE, message=FALSE}
+##### Packages ####
+library(FredsVietorisRips)  # Our Very Own
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(reticulate)
+```
+
+
+```{r sourcepy}
+##### Source our Python Code for Later Use ####
+# All the code
+filelist <- list.files("../python/")
+for (f in filelist) {
+  source_python(paste0("../python/", f))
+}
+```
+
+
+```{r get_data}
+##### Import Data ####
+df_original <- read.csv("../data/Clark_Sample_data.csv", col.names = c("x", "y"))
+
+##### Visualize Data ####
+df_original %>%
+  ggplot(aes(x, y)) +
+  geom_point() +
+  ggtitle("Sample Data")
+
+```
+
+
+```{r sample_data}
+##### Take a section of the original data ####
+sample_size <- 1000
+df <- df_original[df_original$x < 0.5 & df_original$y < 0.25, ]
+df <- sample_n(df, sample_size)
+
+# Make it compatible with Pyton, start with zero
+rownames(df) <- as.numeric(rownames(df)) - 1
+
+##### Let's seee what we're working with ####
+sample_chart <- df %>%
+  ggplot(aes(x, y)) +
+  geom_point() + 
+  ggtitle(paste("Sample of", sample_size, "Points"))
+
+sample_chart
+```
+
+
+```{r filter_by_cover}
+##### Filter ####
+resolution <- 0.04
+gain <- 0.75
+list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+```
+
+```{r cover_chart}
+##### Cover example ####
+cover_number <- 10
+list_of_covers[[cover_number]] %>%
+  ggplot(aes(x, y)) + 
+  geom_point() + 
+  ggtitle(paste("A Look at Cover", cover_number))
+
+
+```
+
+
+
+
+```{r}
+epsilon <- 0.1
+c10 <- list_of_covers$Cover_10
+
+components <- Pairwisedist(c10$x, c10$y) %>%
+  AdjacencyMatrix(epsilon) %>%
+  FredsDBSCAN(min_connections)
+names(components) <- paste0("Component_", c(1:length(components)))
+names(components)
+```
+
+
+
+
+```{r dbscan}
+##### Choose Epsilon and Minimum Connections ####
+epsilon <- 0.1
+min_connections <- 3
+
+##### How many components do we have? #####
+components <- vector("list", length = length(list_of_covers))
+for (cover in c(1:length(list_of_covers))) {
+  components[[cover]] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%  # Create a distance matrix
+    AdjacencyMatrix(epsilon) %>%                                                               # Determine Adjacent Points
+    FredsDBSCAN(min_connections)                                                               # Scan for Clusters
+  
+  names(list_of_covers)[cover] <- paste0("cover_", cover)
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
