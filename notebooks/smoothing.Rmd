@@ -1,0 +1,251 @@
+---
+title: "Smoothing out the Noise"
+author: "Fred Kaesmann"
+date: "5/23/2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  message = F,
+  warning = F,
+  fig.width = 6,
+  fig.asp = 0.618)
+```
+
+
+```{r}
+library(FredsVietorisRips)
+Load_FVR_Dependendencies()
+Source_FVR_py(notebook = TRUE)
+```
+
+\section{Data}
+
+We begin with a set of points, $\mathbb{X}$, and we would like to determine the 
+number of holes present via persistent homology. 
+
+```{r get_data}
+##### Import Data ####
+df_original <- read.csv("../data/Clark_Sample_data.csv", col.names = c("x", "y"))
+```
+
+\section{Initial Condiditons}
+
+```{r initial_conditions}
+##### Trials and Samples ####
+# How many points are we sampling 
+#   and how many times are we sampling
+sample_size <- 1000
+ntrials <- 7
+
+##### Size and Overlap of Pullback Covers ####
+# What is the length of our pullback cover 
+#    and what is the overlap between them?
+resolution <- 0.05
+gain <- 0.75
+
+##### Connection Distance and Cluster Requirements ####
+# Points within distance epsilon are connected
+#   and  only points with a minimum number of
+#   connections are considered valid clusters 
+epsilon <- 0.1
+min_connections <- 3
+
+##### Number of Components per Cover per Trial ####
+ncomponents <- vector("list", length = ntrials)
+```
+
+We run `r ntrials` iterations where we sample `r sample_size` points from our 
+original point cloud. 
+Each cover beginning at 0 has resolution, or length, `r resolution` and they 
+overlap `r gain * 100`\%.
+As we move up the $y$-axis we allocate to each cover the points 
+\begin{equation*}
+  \text{Cover}_j = \{(x_i, y_i) |  y_i \in [y_j, y_j + r)\}
+\end{equation*}
+where $y_j$ is the lower bound of our cover, and $y_j + r$ is its upper bound.
+
+
+\section{Run Trials}
+When we run each trial we process the data as normal, the only difference is 
+that we create a list of list which contains the number of components in each 
+cover for each of our trials.
+We use this list of lists to determine the average number of components in each 
+cover and plot that.
+
+```{r run_trials}
+for (trial in c(1:ntrials)) {
+  ##### Sample Original Data ####
+  df <- df_original %>%
+    sample_n(sample_size)
+  
+  # Make it compatible with Pyton, start with zero
+  rownames(df) <- as.numeric(rownames(df)) - 1
+  
+  ##### Filter ####
+  list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+  
+  ##### How many components do we have? #####
+  components <- FindComponents(list_of_covers, epsilon, min_connections, notebook = TRUE)
+  
+  ##### nComponents per Cover per Trial ####
+  ncomponents[[trial]] <- components %>%
+    lapply(length) %>%
+    unlist()
+}
+```
+
+Below we turn our list of lists into a table to show the minor variations in 
+the number of components in each cover.
+
+```{r trial_results}
+##### Matrix of Trial Results ####
+trialMatrix <- matrix(unlist(ncomponents), 
+                   ncol = ntrials)
+dimnames(trialMatrix) <- list(
+  paste("Cover", c(1:nrow(trialMatrix))),
+  paste("Trial", c(1:ntrials))
+)
+
+##### Average Components by Cover ####
+averageComponents <- trialMatrix %>% 
+  rowSums() / ntrials 
+```
+
+```{r echo=FALSE, include=FALSE}
+##### Trial Results ####
+trialMatrix %>% 
+  cbind(averageComponents) %>%
+  kable(caption = "Components in each Cover in each Trial")
+```
+
+\section{Visualization of our Data and our Components}
+```{r visualize, echo=FALSE}
+
+##### Original Data Chart ####
+c1 <- df_original %>%
+  ggplot(aes(x, y)) +
+  geom_point() +
+  ggtitle("Original Data")
+
+##### Average Components by Cover ####
+c2 <- data.frame(
+  cover = c(1:nrow(trialMatrix)),
+  ncomp = averageComponents) %>%
+  ggplot(aes(x = cover,
+             y = ncomp)) + 
+  geom_col() + 
+  coord_flip() +
+  ggtitle("Average Components in each Cover")
+
+##### Side by Side ####
+gridExtra::grid.arrange(c1, c2, nrow=1)
+```
+
+
+\section{Some Additional Thoughts}
+
+Our above bar chart shows that our initial conditions appear to be well chosen
+to represent our specific data. 
+This is not the case for what appears to be even minor changes in those
+initial conditions. 
+
+```{r varrying_initial_conditions}
+##### Constant Conditions ####
+sample_size <- 750
+ntrials <- 3
+min_connections <- 3
+epsilon <- 0.1
+
+
+
+##### Varrying Condidtions 
+resolutionSet <- c(0.25, 0.2, 0.15, 0.1, 0.05, 0.025)
+gainSet <- c(0.5, 0.75)
+
+##### Number of Components per Cover per Trial ####
+ncomponents <- vector("list", length = ntrials)
+```
+
+```{r run_varried_trials}
+for (resolution in resolutionSet) {
+  for (gain in gainSet) {
+    for (trial in c(1:ntrials)) {
+      ##### Sample Original Data ####
+      df <- df_original %>%
+        sample_n(sample_size)
+      
+      # Make it compatible with Pyton, start with zero
+      rownames(df) <- as.numeric(rownames(df)) - 1
+      
+      ##### Filter ####
+      list_of_covers <- PullBackCovers(df$x, df$y, resolution, gain)
+      
+      ##### How many components do we have? #####
+      components <- FindComponents(list_of_covers, epsilon, min_connections, notebook = TRUE)
+      
+      ##### nComponents per Cover per Trial ####
+      ncomponents[[trial]] <- components %>%
+        lapply(length) %>%
+        unlist()
+    }
+    ##### Matrix of Trial Results ####
+    trialMatrix <- matrix(unlist(ncomponents), 
+                   ncol = ntrials)
+    ##### Average Components by Cover ####
+    averageComponents <- trialMatrix %>% 
+    rowSums() / ntrials 
+
+    ##### Create a Chart for each Resolution and Gain Pair ####
+    chart <- data.frame(
+      cover = c(1:nrow(trialMatrix)),
+      ncomp = averageComponents) %>%
+      ggplot(aes(x = cover,
+                 y = ncomp)) + 
+      geom_col() + 
+      coord_flip() +
+      ggtitle(paste("Resolution:", resolution), 
+              paste("Gain:", gain))
+    
+    ##### Name each chart cx.xxy.yy ####
+    assign(paste0("c", resolution,gain), chart)
+  }
+}
+```
+
+```{r plot_covers, echo=FALSE, fig.width=8}
+gridExtra::grid.arrange(c0.0250.5, c0.050.5, c0.10.5,
+                        nrow = 1, top = "Gain of 50%")
+gridExtra::grid.arrange(c0.150.5, c0.20.5, c0.250.5,
+                        nrow = 1, top = "Gain of 50%")
+gridExtra::grid.arrange(c0.0250.75, c0.050.75, c0.10.75, 
+                        nrow = 1, top = "Gain of 75%")
+gridExtra::grid.arrange(c0.150.75, c0.20.75, c0.250.75,
+                        nrow = 1, top = "Gain of 75%")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

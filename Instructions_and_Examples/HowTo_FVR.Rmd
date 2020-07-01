@@ -1,0 +1,46 @@
+---
+title: "How to Use Freds VietorisRips Package"
+author: "Fred Kaesmann"
+date: "5/20/2020"
+output: pdf_document
+---
+
+```{r chunk_options, include=FALSE}
+library(knitr)
+opts_chunk$set(
+  warning = F,
+  message = F,
+  fig.width = 6,
+  fig.asp = 0.618
+)
+```
+
+```{r our_package, warning=FALSE, message=FALSE}
+##### Packages ####
+
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(reticulate)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
