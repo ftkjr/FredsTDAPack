@@ -6,15 +6,15 @@
 #'
 #' @return a list of the indices of the points in each respective cover
 #'
-FindComponents <- function(list_of_covers, epsilon, minimum_connections) {
-  library(magrittr)
+FindComponents <- function(list_of_covers, epsilon, minimum_connections, notebook = FALSE) {
+  Source_FVR_py(notebook)
 
   ##### How many components do we have? #####
   components <- vector("list", length = length(list_of_covers))
   for (cover in c(1:length(list_of_covers))) {
     components[[cover]] <- Pairwisedist(list_of_covers[[cover]]$x, list_of_covers[[cover]]$y) %>%  # Create a distance matrix
       AdjacencyMatrix(epsilon) %>%                                                               # Determine Adjacent Points
-      FredsDBSCAN(min_connections)                                                               # Scan for Clusters
+      py$FredsDBSCAN(min_connections)                                                               # Scan for Clusters
   }
 
   return(components)
