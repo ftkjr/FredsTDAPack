@@ -23,13 +23,11 @@ FredsDBSCAN <- function(adjacency_matrix, minimum_connections, untraversed_point
   # Then update the remaining points
   # And increase the list entry counter
   i <- 1
-  while (length(untraversed_points >= minimum_connections)) {
+  while (length(untraversed_points) >= minimum_connections) {
     cluster_info <- get_cluster(adjacency_matrix, minimum_connections, untraversed_points)
     if (is.null(cluster_info[[1]]) | is.null(cluster_info[[2]])) {
       return(cluster_list)
     }
-
-
     cluster_list[i] <- cluster_info[1]
     untraversed_points <- cluster_info[[2]]
     i <- i + 1

@@ -11,7 +11,7 @@ TidyDistanceFrame <- function(mat) {
   }
 
   ##### Set Names ####
-  colnames(df) <- c("Element1", "Element2", "Value")
+  colnames(df) <- c("Element1", "Element2", "Distance")
 
   ##### as.data.frame ####
   df <- as.data.frame(df)
