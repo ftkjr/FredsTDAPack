@@ -10,10 +10,11 @@
 #' @return a list of clusters
 #'
 FredsDBSCAN <- function(adjacency_matrix, minimum_connections, untraversed_points = NULL) {
+
   ##### Initialize Containers ####
   cluster_list <- list()
   cluster <- vector()
-  if (is.null(untraversed_points)) untraversed_points <- c(1:length(adjacency_matrix))
+  if (is.null(untraversed_points)) untraversed_points <- c(1:nrow(adjacency_matrix))
 
   ##### Scan through the adjacency matrix for clusters ####
   # Initialize counter to populate the cluster list
