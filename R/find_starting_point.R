@@ -8,7 +8,7 @@
 #'                             adjacencies
 #'
 #' @return If there is no starting point the function returns NULL.
-#'           Else it returns the starting point and the points to be traversed
+#'           Else it returns the starting point
 #'
 find_starting_point <- function(adjacency_matrix, minimum_connections, untraversed_points) {
 
@@ -16,15 +16,10 @@ find_starting_point <- function(adjacency_matrix, minimum_connections, untravers
   for (starting_point in untraversed_points) {
 
     ##### If the point has at least the minimum number of connections ####
-    # 1. Drop the point from the list of untraversed points
-    # 2. Create a list of two entries
-    #  - Entry 1: The starting point of the cluster
-    #  - Entry 2: The remaining points to check
-    # 3. Return the list
+    # Return the point
     if (sum(adjacency_matrix[starting_point, ]) >= minimum_connections) {
-      untraversed_points <- untraversed_points[untraversed_points != starting_point]
-      starting_info <- list(starting_point, untraversed_points)
-      return(starting_info)
+      # cat("\n Starting Point: ", starting_point )
+      return(starting_point)
     }
 
     ##### If we hit the last point in the list at this point ####
