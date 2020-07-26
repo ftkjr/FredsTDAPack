@@ -23,35 +23,46 @@ get_cluster <- function(adjacency_matrix, minimum_connections, untraversed_point
   starting_point <- find_starting_point(adjacency_matrix, minimum_connections, untraversed_points)
 
   ##### If we can't find a starting point ####
-  if (is.null(starting_point[[1]])) {
-    cluster_info <- list(NULL, untraversed_points)
-    return(cluster_info)
+  # Return null
+  if (is.null(starting_point)) {
+    return(NULL)
   }
 
   ##### Extract information from starting point list ####
   # Append the starting point to the cluster
   # Then extract the untraversed points
-  cluster <- append(cluster, starting_point[[1]])
-  untraversed_points <- starting_point[[2]]
+  cluster <- append(cluster, starting_point)
+  # cat("\nStarting Point: ", starting_point, "\n")
+  # cat("\n cluster: ", cluster, "\n")
+  untraversed_points <- untraversed_points[untraversed_points != starting_point]
+  # cat("\n utp: ", untraversed_points, "\n")
 
   ##### For each point in our cluster ####
-  for (point in cluster) {
+  point <- 1
+  while (point <= length(cluster)) {
+    # cat("\n cluster: ", cluster, "\n")
+    # cat("\nPoint:", cluster[point], "\n")
 
     ##### Determine which untraversed points are adjacent to the cluster points ####
     for (other_point in untraversed_points) {
+      # cat("\n  other point: ", other_point, "\n")
 
       ##### If point and other_point are adjacent ####
       # Remove other_point from untraversed points list
-      if (adjacency_matrix[point, other_point] == 1) {
+      if (adjacency_matrix[cluster[point], other_point] == 1) {
         untraversed_points <- untraversed_points[untraversed_points != other_point]
+        # cat("\nConnected Point: ", other_point, "\n")
 
         ##### If the point has at least the minimum number of connections ####
         # Append it to the cluster
         if (sum(adjacency_matrix[, other_point]) >= minimum_connections) {
           cluster <- append(cluster, other_point)
+          # cat("\nClustered Point: ", other_point, "\n")
+          # cat("\n cluster: ", cluster, "\n")
         }
       }
     }
+    point <- point + 1
 
   }
   ##### Return the desired information ####
