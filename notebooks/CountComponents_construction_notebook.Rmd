@@ -1,0 +1,41 @@
+---
+title: "CountComponenets Construction Notebook"
+output: html_notebook
+---
+
+
+Given some set of points, $\mathbb{X}$, and some $\epsilon$ within which 
+two points are connected, we scan through the adjacency matrix and count how
+many components there are. 
+
+```{r}
+library(magrittr)
+##### Step 1: Count Single Points ####
+rs <- adjmat %>%
+  rowSums()
+
+singlePoints <- rs[rs == 0] %>%
+  names() %>%
+  as.numeric()
+
+am2 <- adjmat[-singlePoints, -singlePoints]
+```
+
+```{r}
+##### Step 2: DBSCAN ####
+connectedComponents <- am2 %>%
+  FredsVietorisRips::FredsDBSCAN(1) %>%
+  length()
+```
+
+
+```{r}
+##### Step 3: Total Components ####
+totalComponents <- length(singlePoints) + connectedComponents
+```
+
+
+
+
+
+

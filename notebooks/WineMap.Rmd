@@ -1,0 +1,297 @@
+---
+title: "Wine Map"
+author: "by Fred"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+##### Chunk Options ####
+library(knitr)
+opts_chunk$set(
+  warning = F,
+  message = F,
+  fig.width = 6,
+  fig.asp = 0.618
+)
+```
+
+\section{What is the Mapper?}
+\begin{enumerate}
+  \item From data set $\mathbb{X}$
+  \item We create a matrix of distances
+  \item From a quick analysis of our distance matrix,
+          we reasonably choose $\epsilon$
+  \item By using our chosen $\epsilon$, we create an adjacency matrix
+  \item We cover our space
+  \begin{enumerate}
+    \item We select a point at random
+    \item We draw a ball of radius $\epsilon$ around it (initialize Cover $i$).
+    \item Points within $\epsilon$ of our chosen point are allocated to Cover $i.$
+    \item We select an uncovered/unallocated point and repeat the last two steps
+            until all points have been covered.
+  \end{enumerate}
+  \item We create a new adjacency matrix of covers where two covers are adjacent 
+          if their intersection is nonempty.
+  \item We select additional information for coloring and sizing our nodes \\
+        In this case:
+          \begin{itemize}
+            \item Coloring: Red Wines were given a value of 1, White Wines 0.
+            Node Color was determined by mean value of wine type in each cover.
+            \item Sizing: Nodes are sized by the number of points in each cover. 
+          \end{itemize}
+  \item Visualize it
+\end{enumerate}
+
+
+\section{Step 1: Packages and Data}
+
+```{r packages}
+##### Packages ####
+library(tidyverse)    
+library(igraph)
+library(RColorBrewer)
+library(FredsVietorisRips)
+```
+
+```{r data}
+##### Import Data #### 
+red <- read.csv("D:winequality-red.csv")
+white <- read.csv("D:winequality-white.csv")
+
+##### Add column Type ####
+# Column of 
+#   1's for Red
+#   0's for White
+red$type <- 1
+white$type <- 0
+
+##### Sample and Merge ####
+set.seed(2020)
+sample_size <- 50
+df <- red %>%
+  sample_n(sample_size) %>%
+  full_join(sample_n(white, sample_size))
+```
+
+\section{Step 2: Distance Matrix}
+
+```{r pairwise_distance}
+##### Distance Matrix ####
+# Euclidean distance, first 11 columns
+# Not including the "Quality" indicator
+d <- df[1:(ncol(df)-1)] %>%
+  dist() %>%
+  as.matrix()
+```
+
+
+\section{Step 3: Choose $\epsilon$}
+This is where things get a bit subjective
+
+We can look at a histogram of the distances between points to get a feel for
+which $\epsilon$ might be most appropriate. 
+
+```{r choose_epsilon}
+##### Tidy Data ####
+d_tidy <- TidyDistanceFrame(d)
+
+##### Distance Distribution ####
+d_tidy %>%
+  ggplot(aes(Distance)) +
+  geom_histogram(bins = 30) +
+  ylab("Points within this Distance") +
+  ggtitle("Distribution of Distances")
+```
+
+\subsection{"Epsilon Frame"}
+
+We felt that just a histogram alone was inadequate to determine a sufficient
+$\epsilon$, so instead we created a simple "Epsilon Frame," where we track
+the number of connections made out of the total possible for a given set,
+$\binom{n}{2},$ as well as the number of components present.
+
+```{r epsilon_frame}
+##### Create our "Epsilon Frame" ####
+# From a vector of epsilon values
+# we determine 
+# 1. The proportion of connections made 
+# 2. The number of components present
+eframe <- CreateEpsilonFrame(d, seq(0, 50, by = 5))
+
+##### Print Fancy Table ####
+eframe %>% 
+  kable(caption = "Epsilon Frame")
+```
+
+
+```{r epsilon_curves}
+##### Visualize Curves ####
+eframe %>%
+  mutate(Components = Components / 100) %>%
+  ggplot(aes(x = Epsilon)) +
+  geom_line(aes(y = Connections), color = "red") + 
+  geom_line(aes(y = Components), color = "blue") +
+  ylab(NULL) +
+  ggtitle("Epsilon Curves",
+          "Connections in Red, Components in Blue")
+```
+
+
+
+
+\section{Step 2: Open Covers}
+From our Epsilon Frame above, we opted to go with 25
+
+```{r open_covers}
+epsilon <- 25
+  ##### Open Covers ####
+  # Distance matrix -> Adjacency Matrix -> Open Covers
+  covers <- d %>%
+    AdjacencyMatrix(epsilon) %>%
+    OpenCoverEballs()
+  
+  ##### Adjacent Covers ####
+  # Create a graph from an 
+  # Adjacency matrix of our covers
+  covers.plot <- covers %>%
+    CoverAdjacencies() %>%
+    graph_from_adjacency_matrix(mode="undirected")
+
+
+```
+
+
+
+\section{Step 3: Plot it}
+
+
+```{r plot}
+  ##### Graph ####
+    ##### Node Features ####
+    # For each of our Covers (which becomes each of our Nodes)
+    #   1) Turn the average number of Red wines in each Cover
+    #       into an integer [0-11] + 1 to color the Node
+    #      a) A Node of White wine only = 1 (white)
+    #      b) A Node of Red wine only = 12 (darkpurple)
+    #      c) All other Nodes are colored on a scale of [2-11]
+    #   2) Size the each Node by the number of points (wines)
+    #       in each Cover
+    covers.size <- vector()
+    covers.color <- vector()
+    
+    for (i in 1:length(covers)) {
+        # No Red Wines
+      if ( mean( df$type[ covers[[i]] ] ) == 0 ) {
+        covers.color[i] <- 1
+        # No White Wines
+      } else if ( mean (df$type[ covers[[i]] ] ) == 1) {
+        covers.color[i] <- 12
+        # All other Nodes
+      } else {
+        covers.color[i] <- round( mean( df$type[ covers[[i]] ]) * 10 ) + 1
+      }
+      
+      covers.size[i] <- length(covers[[i]])
+    }
+    
+    ##### Coloring ####
+    redscale <- c("white", brewer.pal(9, "Reds"), "violetred3", "violetred4")
+    V(covers.plot)$color <- redscale[covers.color]
+    
+    ##### Sizing ####
+    V(covers.plot)$size <- log(covers.size) * 10
+    
+    ##### Plot ####
+    plot(covers.plot)
+```
+
+
+
+\section{Rerun}
+
+```{r rerun_function, echo=FALSE}
+RerunMapper <- function(sample_size = 50,
+                            epsilon = 25,
+                              title = NULL) {
+
+  ##### Data ####
+  
+    ##### Sample and Merge ####
+    df <- red %>%
+      sample_n(sample_size) %>%
+      full_join(sample_n(white, sample_size))
+    
+  ##### Topology #### 
+    ##### Distance Matrix ####
+    # Euclidean distance, first 11 columns
+    # Not including the "Quality" indicator
+    d <- df[1:(ncol(df)-1)] %>%
+      dist() %>%
+      as.matrix()
+    
+    ##### Open Covers ####
+    # Distance matrix -> Adjacency Matrix -> Open Covers
+    covers <- d %>%
+      AdjacencyMatrix(epsilon) %>%
+      OpenCoverEballs()
+    
+    ##### Adjacent Covers ####
+    # Create a graph from an 
+    # Adjacency matrix of our covers
+    covers.plot <- covers %>%
+      CoverAdjacencies() %>%
+      graph_from_adjacency_matrix(mode="undirected")
+  
+  ##### Graph ####
+    ##### Node Features ####
+    # For each of our Covers (which becomes each of our Nodes)
+    #   1) Turn the average number of Red wines in each Cover
+    #       into an integer [0-11] + 1 to color the Node
+    #      a) A Node of White wine only = 1 
+    #      b) A Node of Red wine only = 12 
+    #      c) All other Nodes are colored on a scale of [2-11]
+    #   2) Size the each Node by the number of points (wines)
+    #       in each Cover
+    covers.size <- vector()
+    covers.color <- vector()
+    
+    for (i in 1:length(covers)) {
+        # No Red Wines
+      if ( mean( df$type[ covers[[i]] ] ) == 0 ) {
+        covers.color[i] <- 1
+        # No White Wines
+      } else if ( mean (df$type[ covers[[i]] ] ) == 1) {
+        covers.color[i] <- 12
+        # All other Nodes
+      } else {
+        covers.color[i] <- round( mean( df$type[ covers[[i]] ]) * 10 ) + 1
+      }
+      
+      covers.size[i] <- length(covers[[i]])
+    }
+    
+    ##### Coloring ####
+    redscale <- c("white", brewer.pal(9, "Reds"), "violetred3", "violetred4")
+    V(covers.plot)$color <- redscale[covers.color]
+    
+    ##### Sizing ####
+    V(covers.plot)$size <- log(covers.size) * 10
+    
+    ##### Plot ####
+    plot(covers.plot, main = title)
+}
+```
+
+```{r rerun}
+##### Rerun the Mapper ####
+# Each iteration takes a new sample of both data sets
+map_iterations <- 10
+for (i in 1:map_iterations) RerunMapper(sample_size = 100,
+                                        title = paste("Map", i))
+
+```
+
+
+

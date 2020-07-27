@@ -1,0 +1,100 @@
+---
+title: "Red Wine Map"
+author: "Fred Kaesmann"
+date: "7/26/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE)
+```
+
+```{r packages}
+library(tidyverse)
+library(igraph)
+library(FredsVietorisRips)
+```
+
+
+```{r data}
+##### Import Data ####
+df0 <- read.csv("D:winequality-red.csv")
+
+##### Sample 50 ####
+df <- df0 %>%
+  sample_n(150)
+
+
+head(df)
+```
+
+
+```{r}
+##### Distance Matrix ####
+# Euclidean distance, first 10 columns
+d <- df[c(1:10)] %>%
+  dist() %>%
+  as.matrix()
+
+##### Open Covers ####
+# Distance matrix -> Adjacency Matrix -> Open Covers
+covers <- d %>%
+  AdjacencyMatrix(epsilon = 15) %>%
+  OpenCoverEballs()
+
+##### Adjacent Covers ####
+# Create a graph from an 
+# Adjacency matrix of our covers
+covers.plot <- covers %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode="undirected")
+
+##### Node Features ####
+covers.size <- vector()
+covers.color <- vector()
+for (i in 1:length(covers)) {
+  covers.color[i] <- mean(df$alcohol[covers[[i]]])
+  covers.size[i] <- mean(df$quality[covers[[i]]])
+}
+
+{
+  V(covers.plot)$size <- covers.size * 8
+  V(covers.plot)$color <- brewer.pal(length(covers.color), "Reds")
+  plot(covers.plot)
+  }
+
+
+```
+
+```{r}
+df[c(covers[[4]], covers[[7]]), ]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

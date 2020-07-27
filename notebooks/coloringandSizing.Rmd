@@ -1,0 +1,97 @@
+---
+title: "Coloring and Sizing"
+output: html_notebook
+---
+
+```{r the_thirty}
+df <- data.frame(
+  x = runif(30),
+  y = runif(30)
+)
+
+d <- df %>%
+  dist() %>%
+  as.matrix()
+epsilon <- 0.25
+
+plot(df$x, df$y)
+```
+
+
+```{r the_works}
+d <- JaccardDissimilarityMatrix(plato$text)
+epsilon <- 0.85
+```
+
+```{r}
+library(tidyverse)
+data("diamonds")
+
+dmds <- diamonds[c(1,5,6,8:10, 7)] %>%
+  sample_n(50)
+
+d <- dmds[c(1:6)] %>%
+  dist() %>%
+  as.matrix()
+# Note: Standardize the whole matrix or each column?
+head(dmds)
+```
+
+
+
+```{r}
+##### Adjacency Matrix ####
+adjmat <- d %>%
+  AdjacencyMatrix(4)
+
+##### Open Covers ####
+covers <- adjmat %>%
+  OpenCoverEballs()
+
+##### Covers Adjacency Matrix ####
+covers.adj <- covers %>% 
+  CoverAdjacencies()
+
+##### Adjacency Graph from Covers ####
+covers.plot <- covers.adj %>%
+  graph_from_adjacency_matrix(mode = "undirected")
+
+##### Points in each Node ####
+covers.size <- covers %>%
+  lapply(length) %>%
+  unlist()
+cat("\nPoints in each cover:\n", covers.size)
+
+##### Standard Deviation of Distances within Each Cover ####
+for ( i in 1:length(covers) ) {
+  covers.density[i] <- ifelse(length(covers[[i]]) > 1, sd(rowSums(d[covers[[i]], covers[[i]]])), 0)
+  covers.meanprice[i] <- dmds$price[covers[[i]]] %>% 
+    log() %>%
+    mean()
+}
+##### Plot ####
+  ##### Node Colors ####
+V(covers.plot)$color <-covers.meanprice 
+# V(covers.plot)$color <- covers.density * 10
+palette(gray.colors(100))
+  ##### Node Size ####
+V(covers.plot)$size <- covers.size * 5
+# V(covers.plot)$size <- covers.density * 100
+plot(covers.plot)
+dmds %>% left_join(diamonds) %>% arrange((desc(y)))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
