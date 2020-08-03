@@ -146,18 +146,18 @@ From our Epsilon Frame above, we opted to go with 25
 
 ```{r open_covers}
 epsilon <- 25
-  ##### Open Covers ####
-  # Distance matrix -> Adjacency Matrix -> Open Covers
-  covers <- d %>%
-    AdjacencyMatrix(epsilon) %>%
-    OpenCoverEballs()
-  
-  ##### Adjacent Covers ####
-  # Create a graph from an 
-  # Adjacency matrix of our covers
-  covers.plot <- covers %>%
-    CoverAdjacencies() %>%
-    graph_from_adjacency_matrix(mode="undirected")
+##### Open Covers ####
+# Distance matrix -> Adjacency Matrix -> Open Covers
+covers <- d %>%
+  AdjacencyMatrix(epsilon) %>%
+  OpenCoverEballs()
+
+##### Adjacent Covers ####
+# Create a graph from an 
+# Adjacency matrix of our covers
+covers.plot <- covers %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode="undirected")
 
 
 ```
@@ -182,6 +182,7 @@ epsilon <- 25
     covers.color <- vector()
     
     for (i in 1:length(covers)) {
+      ##### Node Color ####
         # No Red Wines
       if ( mean( df$type[ covers[[i]] ] ) == 0 ) {
         covers.color[i] <- 1
@@ -192,12 +193,13 @@ epsilon <- 25
       } else {
         covers.color[i] <- round( mean( df$type[ covers[[i]] ]) * 10 ) + 1
       }
-      
+      ##### Node Size ####
       covers.size[i] <- length(covers[[i]])
     }
     
     ##### Coloring ####
-    redscale <- c("white", brewer.pal(9, "Reds"), "violetred3", "violetred4")
+    redscale <- brewer.pal(9, "Reds") 
+    redscale <- colorRampPalette(redscale)(12)
     V(covers.plot)$color <- redscale[covers.color]
     
     ##### Sizing ####
@@ -205,6 +207,7 @@ epsilon <- 25
     
     ##### Plot ####
     plot(covers.plot)
+    
 ```
 
 
@@ -273,8 +276,10 @@ RerunMapper <- function(sample_size = 50,
     }
     
     ##### Coloring ####
-    redscale <- c("white", brewer.pal(9, "Reds"), "violetred3", "violetred4")
+    redscale <- brewer.pal(9, "Reds") 
+    redscale <- colorRampPalette(redscale)(12)
     V(covers.plot)$color <- redscale[covers.color]
+    
     
     ##### Sizing ####
     V(covers.plot)$size <- log(covers.size) * 10
@@ -288,8 +293,11 @@ RerunMapper <- function(sample_size = 50,
 ##### Rerun the Mapper ####
 # Each iteration takes a new sample of both data sets
 map_iterations <- 10
-for (i in 1:map_iterations) RerunMapper(sample_size = 100,
-                                        title = paste("Map", i))
+for (i in 1:map_iterations) {
+  RerunMapper(
+        sample_size = 100,
+              title = paste("Map", i))
+}
 
 ```
 

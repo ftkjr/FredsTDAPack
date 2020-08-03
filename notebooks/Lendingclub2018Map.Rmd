@@ -1,0 +1,234 @@
+---
+title: "Lending Club Mapper"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6,
+  fig.asp = 0.618
+)
+```
+
+```{r packages}
+##### Packages ####
+library(readr)
+library(tidyverse)    
+library(igraph)
+library(RColorBrewer)
+library(FredsVietorisRips)
+```
+
+
+```{r import_data}
+##### Import Data ####
+df_0 <- read_csv("D:/lendingclubQ12018.csv")
+```
+
+```{r clean_data}
+##### Numeric Columns Only ####
+df <- df_0 %>%
+  lapply(is.numeric) %>%
+  unlist()
+
+##### Sample and Merge ####
+# set.seed(2020)
+sample_size <- 1000
+df <- df_0[df== TRUE] %>%
+  sample_n(sample_size)
+
+df <- df[ , colSums(is.na(df)) == 0]
+
+##### Distance Matrix ####
+# Euclidean distance, first 11 columns
+# Not including the "Quality" indicator
+d <- df %>%
+  dist() %>%
+  as.matrix()
+
+# ##### Tidy Data ####
+# d_tidy <- TidyDistanceFrame(d)
+# 
+# ##### Distance Distribution ####
+# d_tidy %>%
+#   ggplot(aes(Distance)) +
+#   geom_histogram(bins = 30) +
+#   ylab("Points within this Distance") +
+#   ggtitle("Distribution of Distances")
+
+
+##### Create our "Epsilon Frame" ####
+# From a vector of epsilon values
+# we determine 
+# 1. The proportion of connections made 
+# 2. The number of components present
+# eframe <- CreateEpsilonFrame(d, seq(0, 500000, by = 50000))
+
+##### Print Fancy Table ####
+# eframe %>% 
+#   kable(caption = "Epsilon Frame")
+
+
+# ##### Visualize Curves ####
+# eframe %>%
+#   mutate(Components = Components / 100) %>%
+#   ggplot(aes(x = Epsilon)) +
+#   geom_line(aes(y = Connections), color = "red") + 
+#   geom_line(aes(y = Components), color = "blue") +
+#   ylab(NULL) +
+#   ggtitle("Epsilon Curves",
+#           "Connections in Red, Components in Blue")
+
+
+##### Open Covers ####
+# Distance matrix -> Adjacency Matrix -> Open Covers
+epsilon <- 300000
+covers <- d %>%
+  AdjacencyMatrix(epsilon) %>%
+  OpenCoverEballs()
+
+##### Adjacent Covers ####
+# Create a graph from an 
+# Adjacency matrix of our covers
+covers.plot <- covers %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode="undirected")
+
+##### Node Features ####
+df <- df %>%
+  left_join(df_0)
+
+##### Create Numeric Vector from Subgrades ####
+subgrades <- data.frame(sub_grade = levels(as.factor(df_0$sub_grade)))
+subgrades <- subgrades %>%
+  arrange(desc(-sub_grade)) %>%
+  mutate(sgn = 1:nlevels(as.factor(df_0$sub_grade))) 
+df <- df %>%
+  left_join(subgrades, by = "sub_grade")
+
+##### Color by Numeric Subgrades ####
+greyscale <- grey(seq(0,.9,by=.05))
+
+covers.color <- vector()
+for (cover in 1:length(covers)) {
+  covers.color[cover] <- round( mean( df$sgn[ covers[[ cover ]] ] ) )
+  cat("Average Grade for Node ", cover, ": ", as.character(subgrades[covers.color[cover], 1]), "   Points in Node ", cover, ": ", length(covers[[cover]]), "\n")
+}
+V(covers.plot)$color <- greyscale[covers.color]
+
+##### Sizing ####
+covers.size <- covers %>%
+  lapply(length) %>%
+  unlist()
+V(covers.plot)$size <- log(covers.size) * 15
+##### Plot ####
+plot(covers.plot)
+```
+
+
+
+
+
+
+
+
+```{r}
+##### Sample Data ####
+# set.seed(2020)
+# Numeric Columns only
+# No Columns with NA's
+df.numeric <- df_0 %>%
+  lapply(is.numeric) %>%
+  unlist()
+
+sample_size <- 1000
+df <- df_0[df.numeric == TRUE ] %>%
+  sample_n(sample_size) %>%
+  scale() %>% 
+  as.data.frame()
+
+df <- df[colSums(is.na(df)) == 0]
+##### Distance Matrix ####
+d <- df %>%
+  dist() %>%
+  as.matrix()
+
+##### Open Covers ####
+# Distance matrix -> Adjacency Matrix -> Open Covers
+epsilon <- 20
+covers <- d %>%
+  AdjacencyMatrix(epsilon) %>%
+  OpenCoverEballs()
+
+##### Adjacent Covers ####
+# Create a graph from an 
+# Adjacency matrix of our covers
+covers.plot <- covers %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode="undirected")
+
+##### Node Features ####
+df <- df %>%
+  left_join(df_0)
+
+##### Create Numeric Vector from Subgrades ####
+subgrades <- data.frame(sub_grade = levels(as.factor(df_0$sub_grade)))
+subgrades <- subgrades %>%
+  arrange(desc(-sub_grade)) %>%
+  mutate(sgn = 1:nlevels(as.factor(df_0$sub_grade))) 
+
+
+df <- df %>%
+  left_join(subgrades, by = "sub_grade")
+
+##### Color by Numeric Subgrades ####
+greyscale <- grey(seq(0,.9,by=.05))
+
+covers.color <- vector()
+for (cover in 1:length(covers)) {
+  covers.color[cover] <- round( mean( df$sgn.x[ covers[[ cover ]] ] ) )
+  cat("Average Grade for Node ", cover, ": ", as.character(subgrades[covers.color[cover], 1]), "   Points in Node ", cover, ": ", length(covers[[cover]]), "\n")
+}
+V(covers.plot)$color <- greyscale[covers.color]
+
+##### Sizing ####
+covers.size <- covers %>%
+  lapply(length) %>%
+  unlist()
+V(covers.plot)$size <- log(covers.size) * 15
+
+
+##### Plot ####
+plot(covers.plot)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
