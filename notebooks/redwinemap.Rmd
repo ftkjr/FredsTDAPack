@@ -32,7 +32,7 @@ head(df)
 ```
 
 
-```{r}
+```{r wine_map}
 ##### Distance Matrix ####
 # Euclidean distance, first 10 columns
 d <- df[c(1:10)] %>%
