@@ -7,7 +7,7 @@
 #'
 #' @return a length(epsilon_vector) X 3 dataframe
 #'
-CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector) {
+CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector, zero_to_1 = TRUE) {
 
   ##### Packages ####
   library(magrittr)
@@ -34,7 +34,7 @@ CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector) {
     epsilon_frame[ep, 2] <- dissimilarity_matrix %>%
       AdjacencyMatrix(epsilon_frame[ep, 1], top_right = TRUE) %>%
       rowSums(na.rm = T) %>%
-      sum() / choose(nrow(dissimilarity_matrix), 2)
+      sum()
 
     ##### Connected components ####
     # Wait till we actually have connections
@@ -42,6 +42,11 @@ CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector) {
       epsilon_frame[ep, 3] <- dissimilarity_matrix %>%
         AdjacencyMatrix(epsilon_frame[ep, 1]) %>%
         CountComponents()
+  }
+
+  if (zero_to_1 == TRUE) {
+    epsilon_frame[, 2] <- epsilon_frame[, 2] / choose(nrow(dissimilarity_matrix), 2)
+    epsilon_frame[, 3] <- epsilon_frame[, 3] / nrow(dissimilarity_matrix)
   }
 
   ##### Return the Epsilon Frame ####
