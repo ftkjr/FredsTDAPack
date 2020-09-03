@@ -1,0 +1,356 @@
+---
+title: "Beer Map"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+```{r setup, include=F}
+library(knitr)
+opts_chunk$set(
+  echo = FALSE, 
+  message = F,
+  warning = F
+)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(igraph)
+library(FredsVietorisRips)
+```
+
+
+```{r data}
+df_0 <- read.csv("D:/fermentation_rawdata.csv")
+
+df <- df_0 %>%
+  select(bb, Batch, VDK, PH, GRAV, RE, RDF, ADF, delta_grav) %>%
+  na.omit() 
+```
+
+
+```{r distance_matrix}
+##### Create Distance Matrix ####
+d1 <- df[3:9] %>%
+  dist(diag = T, upper = T) %>%
+  as.matrix()
+
+d2 <- df[3:9] %>%
+  dist(diag = T, upper = T) %>%
+  as.matrix() %>%
+  scale()
+
+d3 <- df[3:9] %>%
+  scale() %>%
+  dist(diag = T, upper = T) %>%
+  as.matrix()
+
+d4 <- df[3:9] %>%
+  scale() %>%
+  dist(diag = T, upper = T) %>%
+  as.matrix() %>%
+  scale()
+```
+
+```{r}
+##### Histogram: Unscaled ####
+td1 <- d1 %>%
+  TidyDistanceFrame() 
+
+c1 <- td1 %>%
+  ggplot(aes(Distance)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept = mean(Distance) - sd(Distance), color = "red"), show.legend = F) + 
+  ggtitle("unscaled")
+
+##### Histogram: Scaled Distances ####
+td2 <- d2 %>%
+  TidyDistanceFrame() 
+
+c2 <- td2 %>%
+  ggplot(aes(Distance)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept = mean(Distance) - sd(Distance), color = "red"), show.legend = F) + 
+  ggtitle("distance then scale")
+
+##### Histogram: Scaled Data ####
+td3 <- d3 %>%
+  TidyDistanceFrame() 
+
+c3 <- td3 %>%
+  ggplot(aes(Distance)) + 
+  geom_histogram() +
+  geom_vline(aes(xintercept = mean(Distance) - sd(Distance), color = "red"), show.legend = F) + 
+  ggtitle("Scale then distance") 
+
+##### Histogram: Scaled Data Scaled Distance ####
+td4 <- d4 %>%
+  TidyDistanceFrame() 
+
+c4 <- td4 %>%
+  ggplot(aes(Distance)) + 
+  geom_histogram() + 
+  geom_vline(aes(xintercept = mean(Distance) - sd(Distance), color = "red"), show.legend = F) + 
+  ggtitle("Scale then distance then scale") 
+
+gridExtra::grid.arrange(c1, c2, c3, c4, nrow=2)
+  
+```
+
+
+## unscaled 
+
+### Hist
+```{r}
+##### Print Histogram: Unscaled ####
+c1
+```
+
+### Epsilon Frame
+
+```{r unscaled}
+##### Unscaled Data ####
+d <- d1
+eframe <- d  %>%
+  CreateEpsilonFrame(seq(50, 500, by = 50))
+
+eframe
+
+eframe %>%
+  ggplot(aes(x = Epsilon)) + 
+  geom_line(aes(y = Connections), color = "red") +
+  geom_line(aes(y = Components), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*nrow(d), name = "Components")) +
+  ggtitle("Unscaled",
+          "Components in Blue, Proportion of Connections in Red")
+```
+
+### Map 
+
+```{r}
+##### Map: Unscaled Data ####
+epsilon <- 60
+
+cover <- d %>%
+    AdjacencyMatrix(epsilon) %>%
+    OpenCoverEballs()
+  
+cover.plot <- cover %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode = "undirected") 
+
+cover.size <- cover %>%
+  lapply(length) %>%
+  unlist()
+
+V(cover.plot)$size <- cover.size * 2.5
+
+cover.plot %>%
+  plot(main = paste("Epsilon =", epsilon))
+```
+
+### Analyze 
+
+```{r}
+###### Analyze: Unscaled Data ####
+for (element in 1:length(cover)) {
+  cat("\nCover Element ", element, "\n")
+  df[cover[[element]], ] %>%
+    select(bb, Batch) %>%
+    print()
+}
+```
+
+
+## Distance then Scale
+
+### Hist
+```{r}
+##### Histogram: Distance then Scale ####
+c2
+```
+
+### Epsilon Frame 
+```{r}
+##### Distance then Scale ####
+d <- d2
+eframe <- d %>%
+  CreateEpsilonFrame(seq(-2, 0, by =.25))
+
+eframe
+
+eframe %>%
+  ggplot(aes(x = Epsilon)) + 
+  geom_line(aes(y = Connections), color = "red") +
+  geom_line(aes(y = Components), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*nrow(d), name = "Components")) + 
+  ggtitle("Distance then Scale",
+          "Components in Blue, Proportion of Connections in Red")
+```
+
+### Map 
+
+```{r}
+##### Map: Unscaled Data ####
+epsilon <- -.75
+
+cover <- d %>%
+    AdjacencyMatrix(epsilon) %>%
+    OpenCoverEballs()
+  
+cover.plot <- cover %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode = "undirected") 
+
+cover.size <- cover %>%
+  lapply(length) %>%
+  unlist()
+
+V(cover.plot)$size <- cover.size * 2.5
+
+cover.plot %>%
+  plot(main = paste("Epsilon =", epsilon))
+```
+
+### Analyze 
+
+```{r}
+###### Analyze: Unscaled Data ####
+for (element in 1:length(cover)) {
+  cat("\nCover Element ", element, "\n")
+  df[cover[[element]], ] %>%
+    select(bb, Batch) %>%
+    print()
+}
+```
+
+## Scale then Distance
+### Hist
+```{r}
+##### Histogram: Distance then Scale ####
+c3
+```
+
+### Epsilon Frame 
+```{r}
+##### Distance then Scale ####
+d <- d3
+eframe <- d %>%
+  CreateEpsilonFrame(seq(0, 2.5, by =.25))
+
+eframe %>%
+  mutate(Components = Components * nrow(d3))
+
+eframe %>%
+  ggplot(aes(x = Epsilon)) + 
+  geom_line(aes(y = Connections), color = "red") +
+  geom_line(aes(y = Components), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*nrow(d), name = "Components")) + 
+  ggtitle("Distance then Scale",
+          "Components in Blue, Proportion of Connections in Red")
+```
+
+### Map 
+
+```{r}
+##### Map: Unscaled Data ####
+epsilon <- 1.5
+
+cover <- d %>%
+    AdjacencyMatrix(epsilon) %>%
+    OpenCoverEballs()
+  
+cover.plot <- cover %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode = "undirected") 
+
+cover.size <- cover %>%
+  lapply(length) %>%
+  unlist()
+
+V(cover.plot)$size <- cover.size * 2.5
+
+cover.plot %>%
+  plot(main = paste("Epsilon =", epsilon))
+```
+
+### Analyze 
+
+```{r}
+###### Analyze: Unscaled Data ####
+for (element in 1:length(cover)) {
+  cat("\nCover Element ", element, "\n")
+  df[cover[[element]], ] %>%
+    select(bb, Batch) %>%
+    print()
+}
+```
+
+## Scale then Scale
+
+### Hist
+```{r}
+##### Histogram: Distance then Scale ####
+c4
+```
+
+### Epsilon Frame 
+```{r}
+##### Scale then Scale ####
+d <- d4
+eframe <- d %>%
+  CreateEpsilonFrame(seq(-1.3, -1.1, by =.025))
+
+eframe %>%
+  mutate(Components = Components * nrow(d3))
+
+eframe %>%
+  ggplot(aes(x = Epsilon)) + 
+  geom_line(aes(y = Connections), color = "red") +
+  geom_line(aes(y = Components), color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~.*nrow(d), name = "Components")) + 
+  ggtitle("Distance then Scale",
+          "Components in Blue, Proportion of Connections in Red")
+```
+
+### Map 
+
+```{r}
+##### Map: Scale then Scale ####
+epsilon <- -1.15
+
+cover <- d %>%
+    AdjacencyMatrix(epsilon) %>%
+    OpenCoverEballs()
+  
+cover.plot <- cover %>%
+  CoverAdjacencies() %>%
+  graph_from_adjacency_matrix(mode = "undirected") 
+
+cover.size <- cover %>%
+  lapply(length) %>%
+  unlist()
+
+V(cover.plot)$size <- cover.size * 2.5
+
+cover.plot %>%
+  plot(main = paste("Epsilon =", epsilon))
+```
+
+### Analyze 
+
+```{r}
+###### Analyze: Unscaled Data ####
+for (element in 1:length(cover)) {
+  cat("\nCover Element ", element, "\n")
+  df[cover[[element]], ] %>%
+    select(bb, Batch) %>%
+    print()
+}
+```
+
+
