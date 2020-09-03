@@ -7,7 +7,9 @@
 #'
 #' @return a length(epsilon_vector) X 3 dataframe
 #'
-CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector, zero_to_1 = TRUE) {
+CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector,
+                               zero_to_one = FALSE,
+                               connection_proportion = FALSE) {
 
   ##### Packages ####
   library(magrittr)
@@ -44,10 +46,10 @@ CreateEpsilonFrame <- function(dissimilarity_matrix, epsilon_vector, zero_to_1 =
         CountComponents()
   }
 
-  if (zero_to_1 == TRUE) {
-    epsilon_frame[, 2] <- epsilon_frame[, 2] / choose(nrow(dissimilarity_matrix), 2)
-    epsilon_frame[, 3] <- epsilon_frame[, 3] / nrow(dissimilarity_matrix)
-  }
+  # if (zero_to_one == TRUE) {
+  #   epsilon_frame[, 2] <- epsilon_frame[, 2] / choose(nrow(dissimilarity_matrix), 2)
+  #   epsilon_frame[, 3] <- epsilon_frame[, 3] / nrow(dissimilarity_matrix)
+  # }
 
   ##### Return the Epsilon Frame ####
   epsilon_frame %>%

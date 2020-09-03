@@ -2,14 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 Euclideandist <- function(x1, y1, x2, y2) {
-    .Call('_FredsVietorisRips_Euclideandist', PACKAGE = 'FredsVietorisRips', x1, y1, x2, y2)
+    .Call('_FredsTDAPack_Euclideandist', PACKAGE = 'FredsTDAPack', x1, y1, x2, y2)
 }
 
 PairwisedistMatrix <- function(x, y) {
-    .Call('_FredsVietorisRips_PairwisedistMatrix', PACKAGE = 'FredsVietorisRips', x, y)
+    .Call('_FredsTDAPack_PairwisedistMatrix', PACKAGE = 'FredsTDAPack', x, y)
 }
 
 centroid <- function(x, y) {
-    .Call('_FredsVietorisRips_centroid', PACKAGE = 'FredsVietorisRips', x, y)
+    .Call('_FredsTDAPack_centroid', PACKAGE = 'FredsTDAPack', x, y)
 }
 
