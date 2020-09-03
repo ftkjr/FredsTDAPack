@@ -1,7 +1,7 @@
-# This is Fred's Vietoris Rips Package
+# This is Fred's Topological Data Analysis Package
 ## By Fred
 
-This package determines connected components and plots 1 simplices from a set of x and y coordinates.
+This package is a collection of code I've put together to do TDA
 
 Example PDFs are in the Instructions_and_Example.
 I recommend the .html file for Implementation, though that needs to be downloaded to be viewed
